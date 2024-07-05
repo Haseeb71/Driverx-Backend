@@ -1,0 +1,30 @@
+{
+  "name": "the",
+  "version": "1.4.0",
+  "description": "An example Parse API server using the parse-server module",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@mailchimp/mailchimp_marketing": "^3.0.72",
+    "dotenv": "^14.3.2",
+    "express": "^4.17.2",
+    "kerberos": "^1.1.4",
+    "moment": "^2.28.0",
+    "node-cron": "^3.0.0",
+    "nodemon": "^2.0.15",
+    "parse": "^3.4.1",
+    "parse-server": "^4.10.4",
+    "stripe": "^8.194.0",
+    "twilio": "^3.72.0"
+  },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=4.3"
+  }
+}
