@@ -177,8 +177,8 @@ app.post("/create-checkout-session", async (req, res) => {
         },
       ],
       mode: "payment",
-      success_url: `http://localhost:8080/#/login?packageId=${packageId}&userId=${userId}&schoolId=${schoolId}&prePaid=${prePaid}`,
-      cancel_url: "http://localhost:8080/#/cencel",
+      success_url: `https://app.thedriverx.com/#/login?packageId=${packageId}&userId=${userId}&schoolId=${schoolId}&prePaid=${prePaid}`,
+      cancel_url: "https://app.thedriverx.com/#/cencel",
     });
 
     res.json({ id: session.id });
