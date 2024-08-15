@@ -21,6 +21,51 @@ var phoneNumberT = process.env.TWILIO_PHONE_NUMBER;//"8f3f08b9a55b3b4c17d632ea4e
 
 const client = require('twilio')(accountSid, authToken);
 
+Parse.Cloud.define("fetchSchoolPackages", async (request) => {
+  // Check if the class exists
+  const schema = new Parse.Schema('SchoolPackages');
+  try {
+    await schema.get(); // This will throw an error if the class does not exist
+  } catch (error) {
+    console.error("Class does not exist: ", error);
+    throw new Parse.Error(101, 'Class SchoolPackage does not exist');
+  }
+
+  // Define the SchoolPackage class
+  const SchoolPackage = Parse.Object.extend("SchoolPackages");
+  
+  // Create a query for the SchoolPackage class
+  const query = new Parse.Query(SchoolPackage);
+
+  try {
+    // Execute the query to fetch all SchoolPackage objects
+    const results = await query.find();
+
+    // Map the results to a more readable format if necessary
+    const packages = results.map((package) => {
+      return {
+        id: package.id,
+        name: package.get("name"),
+        description: package.get("packageDetails"),
+        price: package.get("price"),
+        // Add other fields as necessary
+      };
+    });
+
+    // Return the packages in the response
+    return {
+      packages: packages,
+      message: "Successfully fetched SchoolPackages",
+      code: 200,
+    };
+  } catch (error) {
+    // Handle any errors
+    console.error("Error while fetching SchoolPackages: ", error);
+    throw new Parse.Error(error.code || 500, error.message || 'Failed to fetch SchoolPackages');
+  }
+});
+
+
 /**Update log in email */
 Parse.Cloud.define("pingMailChimp", async (request, response) => {
   await mailchimp.ping.get();
@@ -295,6 +340,41 @@ Parse.Cloud.define("newUserJoined", async (request, response) => {
     await mailgun.messages().send(data, async (error, body) => {
       return "Email sent!";
     });
+  } else {
+    return "Email is required.";
+  }
+});
+
+/** Inform Admin that Client Via Provided City for Road Test  */
+Parse.Cloud.define("sendCityToAdminEmail", async (request, response) => {
+  if (request.params.name) {
+    var body = "<p>Good day Ali!</p>";
+    body +=
+      "<p>A new user named <b>" +
+      request.params.name +
+      "</b> with the user type " +
+      request.params.type +
+      " and has following contact information " +
+      request.params.contact +
+      " has Provided City for Road Test. </p> " + 
+      `<h3>City : ${ request.params.city} </h3>`;
+    var data = {
+      from: "The Driver X<no-reply@thedriverx.com/>",
+      to: "ontariodriverx@gmail.com",
+      subject: "User Provided City for Road Test",
+      html: body,
+    };
+    console.log("Data coming  === ", data);
+    try {
+      await mailgun.messages().send(data, async (error, body) => {
+        console.log("Email Sent Success == ", body);
+        console.log("Email Sent Error == ", error);
+        return "Email sent!";
+      });
+    } catch (error) {
+      console.log("Error in Sending Email = ", error);
+      return error
+    }
   } else {
     return "Email is required.";
   }
@@ -942,22 +1022,29 @@ Parse.Cloud.define("sendSMS", async (request, response) => {
 
 /**Send SMS to a customer */
 Parse.Cloud.define("sendAppointmentSMS", async (request, response) => {
-  var getMessage = request.params.message,
-    getPhoneTo = request.params.to,
-    getPhoneFrom = process.env.TWILIO_PHONE_NUMBER;
+    const getMessage = request.params.message;
+    const getPhoneTo = request.params.to;
 
-  await client.messages
-    .create({
-      body: getMessage, // Any number Twilio can deliver to
-      from: getPhoneFrom, // A number you bought from Twilio and can use for outbound communication
-      to: getPhoneTo, // body of the SMS message
-    })
-    .then(function (results) {
-      response.success(results.sid);
-    })
-    .catch(function (error) {
-      response.error(error);
-    });
+    const data = {
+      body: getMessage,
+      from : phoneNumberT,
+      to : getPhoneTo
+    }
+    console.log("Daat  === ", data );
+    try{
+      console.log(data,'data')
+      await client.messages
+          .create(data)
+          .then(message => {
+            console.log("@@@@---MSG SENT----@@@s" ,message.sid);
+          });
+    } catch (e) {
+      console.log(e,'Error')
+    }
+    return {
+      success: true,
+      message:'sent'
+    }
 });
 
 Parse.Cloud.define('phone-number-verification',async (request, response) => {
@@ -980,6 +1067,7 @@ Parse.Cloud.define('phone-number-verification',async (request, response) => {
       from : phoneNumberT,
       to : `${phoneNumber}`
     }
+    console.log("Daat  === ", data );
     try{
       console.log(data,'data')
       await client.messages
@@ -1055,3 +1143,6 @@ Parse.Cloud.define('verifyPhoneNumber',async (request, response) => {
     message:message
   }
 });
+
+
+
