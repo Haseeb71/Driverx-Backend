@@ -160,14 +160,14 @@ app.get("/test", function (req, res) {
 
 app.post("/create-checkout-session", async (req, res) => {
   try {
-    const { name, price, packageId, userId, schoolId, prePaid } = req.body;
+    const { name, price, packageId, userId, schoolId, prePaid, email } = req.body;
     console.log(req.body);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "cad",
             product_data: {
               name: name,
             },
@@ -176,9 +176,10 @@ app.post("/create-checkout-session", async (req, res) => {
           quantity: 1,
         },
       ],
+      customer_email: email,
       mode: "payment",
-      success_url: `https://app.thedriverx.com/#/login?packageId=${packageId}&userId=${userId}&schoolId=${schoolId}&prePaid=${prePaid}`,
-      cancel_url: "https://app.thedriverx.com/#/cencel",
+      success_url: `https://app.thedriverx.com/#/login?packageId=${packageId}&userId=${userId}&schoolId=${schoolId}&prePaid=${prePaid}&payment=success`,
+      cancel_url: "https://app.thedriverx.com/#/signup?payment=failed",
     });
 
     res.json({ id: session.id });
@@ -224,7 +225,6 @@ app.post(
         const studentId = queryParams.get("userId");
         const schoolId = queryParams.get("schoolId");
         const prePaid = queryParams.get("prePaid");
-        // Output the results
         console.log("Package ID:", schoolPackageId);
         console.log("User ID:", studentId);
         console.log("schoolId:", schoolId);
@@ -233,12 +233,12 @@ app.post(
         try {
           await Parse.Cloud.run('updateUserPrePaid', { studentId });
 
-          await addSchoolPackageJoined({
-            schoolId,
-            schoolPackageId,
-            studentId,
-            prePaid,
-          });
+          // await addSchoolPackageJoined({
+          //   schoolId,
+          //   schoolPackageId,
+          //   studentId,
+          //   prePaid,
+          // });
         } catch (error) {}
         break;
       default:
