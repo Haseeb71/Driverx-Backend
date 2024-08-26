@@ -697,6 +697,7 @@ Parse.Cloud.define("chargeCardForSchoolPackage", async (request, response) => {
 
 /**Charge student on their saved card when instructor mark appmnt as finished */
 Parse.Cloud.define("chargeCardForAppointment", async (request, response) => {
+  console.log("chargeCardForAppointment ==", request.params)
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: request.params.amount,
@@ -715,11 +716,14 @@ Parse.Cloud.define("chargeCardForAppointment", async (request, response) => {
   } catch (err) {
     // Error code will be authentication_required if authentication is needed
     console.log("Error code is: ", err.code);
-    const paymentIntentRetrieved = stripe.paymentIntents.retrieve(
-      err.raw.payment_intent.id
-    );
-    console.log("PI retrieved: ", paymentIntentRetrieved.id);
-    return response.status("402").send({ error: { message: err.message } });
+    console.log("err.raw.payment_intent: ", err.raw.payment_intent);
+    if(err.raw.payment_intent){
+      const paymentIntentRetrieved = stripe.paymentIntents.retrieve(
+        err.raw.payment_intent?.id
+      );
+      console.log("PI retrieved: ", paymentIntentRetrieved.id);
+    }
+    return { message: err.message };
   }
 });
 
